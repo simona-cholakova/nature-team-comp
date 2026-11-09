@@ -51,3 +51,72 @@ Format EXACTLY:
 FINAL: <integer>
 CONF: <0-100>
 RATIONALE: <audit-style reasoning, identify any computational errors, max 6 lines>"""
+
+# ---------------------------------------------------------------------------
+# Transform-stage prompts (numeric/GSM8K)
+# ---------------------------------------------------------------------------
+
+#Proposer-Critic: one critic per proposal
+CRITIC_NUMERIC = """You are a CRITIC. A worker produced the solution below. Find the flaws -- check arithmetic, challenge assumptions, look for missed cases. If after critique the original answer still holds, say so explicitly and report it; otherwise report the answer your critique supports.
+Problem: {question}
+Worker solution to critique:
+{proposal}
+Format EXACTLY (your own answer after the critique):
+FINAL: <integer>
+CONF: <0-100>
+RATIONALE: <list flaws or confirm soundness, max 4 lines>"""
+
+#Tree: fan-in-three synthesizer
+SYNTHESIZER_NUMERIC = """You are a SYNTHESIZER. You have received {b} independent worker solutions to the same problem. Extract the most consistent calculation chain. Do not simply vote -- verify the arithmetic of the answer you report.
+Problem: {question}
+Worker solutions (independent, no communication between them):
+{workers}
+Format EXACTLY:
+FINAL: <integer>
+CONF: <0-100>
+RATIONALE: <integrated reasoning, verify the arithmetic, max 6 lines>"""
+
+#Chain and Cascading-Chain: refiner
+REFINER_NUMERIC = """You are a REFINER. The {b} previous worker(s) below solved this problem in sequence (oldest first). Read them, then produce your own solution. You may agree, disagree, or extend -- but do not just copy.
+Problem: {question}
+Previous worker solutions (chronological):
+{workers}
+Format EXACTLY:
+FINAL: <integer>
+CONF: <0-100>
+RATIONALE: <your refined reasoning, verify arithmetic, max 4 lines>"""
+
+#Tournament: pairwise duelist, and the bye variant for a single parent
+DUELIST_NUMERIC = """You are a JUDGE in a tournament bracket. You will see solutions from {b} competitors. Compare them critically -- check arithmetic, identify reasoning gaps -- then commit to a single answer. If both agree, verify. If they disagree, pick the stronger solution and explain why.
+Problem: {question}
+Competitor solutions:
+{workers}
+Format EXACTLY:
+FINAL: <integer>
+CONF: <0-100>
+RATIONALE: <which solution prevails and why, max 4 lines>"""
+
+DUELIST_BYE_NUMERIC = """One contestant advanced via bye in this tournament round; their solution is below. Your job is to verify their arithmetic and logic, NOT pick between alternatives. If sound, report the same answer with your own confidence. If you find a flaw, report the answer your check supports.
+Problem: {question}
+Contestant solution:
+{workers}
+Format EXACTLY:
+FINAL: <integer>
+CONF: <0-100>
+RATIONALE: <verification result; sound or flawed, with the load-bearing check, max 4 lines>"""
+
+#Diamond: planners describe a method without solving, plan-solvers execute one
+PLANNER_NUMERIC = """You are PLANNER #{i_one_indexed} of {M}. Your job is to describe ONE method for solving this math problem -- do NOT solve it. The other {M_minus_one} planners are independently producing their own methods; your method should be DIFFERENT from the most obvious approach a solver would default to. Keep it short and specific (3-5 sentences). Do NOT output a final number.
+Problem: {question}
+Format EXACTLY:
+APPROACH: <name of method, e.g., 'unit conversion then ratio', 'set up equation in x', 'work backwards from total'>
+STEPS: <3-5 brief, actionable steps a solver should take, on one or two lines each>"""
+
+PLAN_SOLVER_NUMERIC = """A planner has proposed the following method for this problem. Execute the method to arrive at the answer. You may deviate if you identify a flaw -- but state explicitly when you do.
+Problem: {question}
+Plan:
+{workers}
+Format EXACTLY:
+FINAL: <integer>
+CONF: <0-100>
+RATIONALE: <executed plan, note any deviations, max 4 lines>"""
