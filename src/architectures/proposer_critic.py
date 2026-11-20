@@ -33,7 +33,7 @@ def run(question: str, n: int, item_id: str, run_id: int = 0,
     #Tier 3: the manager reads the critics plus the unpaired proposal, if any
     manager_inputs = critic_outputs + worker_outputs[n_pairs:]
     manager_prompt = MANAGER_NUMERIC.format(
-        m = len(manager_inputs),
+        m = len(managr_inputs),
         question = question,
         reports = format_reports(manager_inputs)
     )
